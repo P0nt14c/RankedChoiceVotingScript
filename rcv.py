@@ -70,6 +70,7 @@ def fill_roster():
 
 
 def print_round(round_num, tallies, titles):
+	#votes is a dictionary with key:value pairs of candidate_names:votes_for_candidate
 	votes = {}
 	print("======================================================")
 	print("Round {}".format(round_num))
@@ -85,17 +86,19 @@ def print_round(round_num, tallies, titles):
 
 def get_lowest_candidate(tallies, candidates_removed):
 	lowest = [0]
+	#iterate through tallies dictionary
+	# t is candidate name
 	for t in tallies:
 		if tallies[t] < tallies[lowest[0]] and t not in candidates_removed:
-			lowest = [t]
+			lowest = [t] #set the first index of lowest list to candidate name
 		if tallies[t] == tallies[lowest[0]] and t not in candidates_removed:
-			lowest.append(t)
+			lowest.append(t) #add the name of candidate to the list of lowest votes
 	# in the event of a tie for lowest. It is often just chosen at random
 	# Source: https://politics.stackexchange.com/q/9749# if ties choose random candidate
 	return random.choice(lowest)
 
 def get_top_candidate_in_play(ballot, candidates_removed):
-	# we will do it th dumb way... :P
+	# we will do it the dumb way... :P
 	for position in range(len(ballot)):
 		for candidate in ballot:
 			if (ballot[candidate] == position) and (candidate not in candidates_removed):
@@ -135,6 +138,7 @@ def perform_elections(worksheet):
 
 
 	# Do first round manually
+	#tallies is a dict with ley:value pairs of candidates:num_votes
 	tallies = {}
 	for candidate in range(num_candidates):
 		tallies[candidate] = 0
@@ -143,25 +147,33 @@ def perform_elections(worksheet):
 
 	vote_data = []
 
+	#count ballots for the first round
 	for ballot in ballots:
 		vote = get_top_candidate_in_play(ballot, candidates_removed)
 		tallies[vote] += 1
 	vote_data.append(print_round(round_num, tallies, titles))
 
-
+	#carry out a ranked-choice vote
 	for round_num in range(1,num_candidates):
+		#eliminate the candidate with the lowest votes
 		lowest = get_lowest_candidate(tallies, candidates_removed)
 		candidates_removed.add(lowest)
+		
+		#reset vote counts for the next round
 		tallies = {}
 		for candidate in range(num_candidates):
 			tallies[candidate] = 0
 
-
+		#count ballots again
 		for ballot in ballots:
 			vote = get_top_candidate_in_play(ballot, candidates_removed)
 			tallies[vote] += 1
+			
+		#add data to vote_data list
 		vote_data.append(print_round(round_num, tallies, titles))
+	
 	return vote_data
+
 
 def get_candidate_labels(vote_data):
 	candidates = []
